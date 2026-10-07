@@ -54,36 +54,23 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: BlocListener<CounterCubit, int>(
+      body: BlocConsumer<CounterCubit, int>(
         listener: (context, state) {
           if (state == 5) {
-            //we can't put the snackbar inside the BlocBuilder.
-            //BlocBuilder only rebuild the widget.
-            //BlocListener -> based state changes, it will do the action
+            //BlocConsumer => BlocListener + BlocBuilder
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('State is 5!')));
           }
         },
-        child: Center(
-          child: BlocBuilder<CounterCubit, int>(
-            builder: ((context, state) {
-              /**
-               *  BlocBuilder<CounterCubit, int>(
-                   builder: (context, count) {
-                      return Text('$count');
-                   },
-                  )
-               * It basically says:
-                 Listen to CounterCubit and rebuild this widget whenever its state changes.
-               */
-              return Text(
-                '$state',
-                style: Theme.of(context).textTheme.headlineMedium,
-              );
-            }),
-          ),
-        ),
+        builder: (context, state) {
+          return Center(
+            child: Text(
+              '$state',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+          );
+        },
       ),
       floatingActionButton: Row(
         mainAxisSize: MainAxisSize.min,
