@@ -1,0 +1,36 @@
+Compare Getx and Cubit+++++++++++++++++++++++++++++++++++++++++++++++
+
+#GetX
+Controller:
+class CounterController extends GetxController {
+  RxInt count = 0.obs;
+
+  void increment() {
+    count.value++;
+  }
+}
+
+UI:
+Obx(
+  () => Text(
+    '${controller.count.value}',
+  ),
+)
+
+=========================================================================
+
+#Cubit
+class CounterCubit extends Cubit<int> {
+  CounterCubit() : super(0);
+
+  void increment() {
+    emit(state + 1);
+  }
+}
+
+UI:
+BlocBuilder<CounterCubit, int>(
+  builder: (context, count) {
+    return Text('$count');
+  },
+)
