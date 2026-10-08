@@ -1,4 +1,7 @@
-import 'package:bloc_learning/counter_cubit.dart';
+import 'package:bloc_learning/auth/auth_cubit.dart';
+import 'package:bloc_learning/auth/auth_state.dart';
+import 'package:bloc_learning/home_page.dart';
+import 'package:bloc_learning/widgets/snackbar/scaffold_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,10 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 * BlocConsumer -> BlocBuilder + BlocListener.
 */
 void main() {
-  //create: (context) => CounterCubit() ---> Make a CounterCubit available to this widget tree(MyApp()).
-  runApp(
-    BlocProvider(create: (context) => CounterCubit(), child: const MyApp()),
-  );
+  //create: (context) => AuthCubit() ---> Make a AuthCubit available to this widget tree(MyApp()).
+  runApp(BlocProvider(create: (context) => AuthCubit(), child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.lightBlue)),
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(title: 'BLoC'),
+      home: const MyHomePage(title: 'BLoC Login'),
     );
   }
 }
@@ -39,13 +40,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // int _counter = 0;
+  final TextEditingController emailTextController = TextEditingController();
+  final TextEditingController passwordTextController = TextEditingController();
 
-  // void _incrementCounter() {
-  //   setState(() {
-  //     _counter++;
-  //   });
-  // }
+  @override
+  void dispose() {
+    emailTextController.dispose();
+    passwordTextController.dispose();
+    super.dispose();
+  }
+
+  void login() {
+    context.read<AuthCubit>().login(
+      email: emailTextController.text.trim(),
+      password: passwordTextController.text.trim(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,56 +64,98 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: BlocConsumer<CounterCubit, int>(
+      body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state == 5) {
-            //BlocConsumer => BlocListener + BlocBuilder
-            ScaffoldMessenger.of(
+          if (state.authState == AuthStatus.success) {
+            Navigator.push(
               context,
-            ).showSnackBar(const SnackBar(content: Text('State is 5!')));
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+            scaffoldSnackbar(context, state.resMessage!);
+            // ScaffoldMessenger.of(
+            //   context,
+            // ).showSnackBar(SnackBar(content: Text(state.resMessage!)));
+          } else if (state.authState == AuthStatus.error) {
+            scaffoldSnackbar(context, state.resMessage!);
+            // ScaffoldMessenger.of(
+            //   context,
+            // ).showSnackBar(SnackBar(content: Text(state.resMessage!)));
           }
         },
         builder: (context, state) {
-          return Center(
-            child: Text(
-              '$state',
-              style: Theme.of(context).textTheme.headlineMedium,
+          final isLoading = state.authState == AuthStatus.loading;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Login",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextFieldWidget(
+                  controller: emailTextController,
+                  keyboardTextType: TextInputType.emailAddress,
+                  textHint: 'Email',
+                ),
+                const SizedBox(height: 20),
+                TextFieldWidget(
+                  controller: passwordTextController,
+                  keyboardTextType: TextInputType.visiblePassword,
+                  textHint: 'Password',
+                ),
+                const SizedBox(height: 50),
+                ElevatedButton(
+                  onPressed: isLoading ? null : login,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadiusGeometry.circular(15),
+                    ),
+                  ),
+                  child: isLoading == true
+                      ? const CircularProgressIndicator()
+                      : const Text("Login"),
+                ),
+                const SizedBox(height: 10),
+                if (state.resMessage != null)
+                  Text(
+                    state.resMessage!,
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+              ],
             ),
           );
         },
       ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              /**
-               *  context.read<CounterCubit>().increment();
-                  This means:
-                  Find the CounterCubit provided above me and call increment().
-               */
-              context.read<CounterCubit>().reset();
-            },
-            tooltip: 'Reset',
-            child: const Icon(Icons.refresh),
-          ),
-          const SizedBox(width: 10),
-          FloatingActionButton(
-            onPressed: () {
-              context.read<CounterCubit>().increment();
-            },
-            tooltip: 'Increment',
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(width: 10),
-          FloatingActionButton(
-            onPressed: () {
-              context.read<CounterCubit>().decrement();
-            },
-            tooltip: 'Decrement',
-            child: const Icon(Icons.remove),
-          ),
-        ],
+    );
+  }
+}
+
+class TextFieldWidget extends StatelessWidget {
+  final TextInputType? keyboardTextType;
+  final String? textHint;
+  final TextEditingController? controller;
+  const TextFieldWidget({
+    super.key,
+    this.keyboardTextType,
+    this.textHint,
+    this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardTextType,
+      decoration: InputDecoration(
+        hintText: textHint,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
       ),
     );
   }

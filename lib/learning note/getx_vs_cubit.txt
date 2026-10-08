@@ -20,6 +20,7 @@ Obx(
 =========================================================================
 
 #Cubit
+Cubit
 class CounterCubit extends Cubit<int> {
   CounterCubit() : super(0);
 
