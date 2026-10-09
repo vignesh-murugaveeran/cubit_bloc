@@ -19,6 +19,7 @@ Comparison between 2 branch(this branch with cubit_login)
 3. In auth_state, we added the copyWith().
 4. Add a new file, lib/widgets/loader/circ_loader_widget.dart.
 5. Update the homepage with BlocConsumer.
+6. Password hide and visible icon.
  */
 
 final _formKey = GlobalKey<FormState>();
@@ -165,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class TextFieldWidget extends StatelessWidget {
+class TextFieldWidget extends StatefulWidget {
   final TextInputType? keyboardTextType;
   final String? textHint;
   final TextEditingController? controller;
@@ -177,30 +178,54 @@ class TextFieldWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    bool isValidEmail(String email) {
-      final RegExp emailRegex = RegExp(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-      );
+  State<TextFieldWidget> createState() => _TextFieldWidgetState();
+}
 
-      return emailRegex.hasMatch(email.trim());
-    }
+class _TextFieldWidgetState extends State<TextFieldWidget> {
+  bool _isPasswordVisible = false;
+  bool isValidEmail(String email) {
+    //RegExep  = Regular Expression
+    final RegExp emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+
+    return emailRegex.hasMatch(email.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isPassword = widget.textHint == "Password";
 
     return TextFormField(
-      controller: controller,
-      keyboardType: keyboardTextType,
+      controller: widget.controller,
+      keyboardType: widget.keyboardTextType,
+      obscureText: isPassword && !_isPasswordVisible,
       decoration: InputDecoration(
-        hintText: textHint,
+        hintText: widget.textHint,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        suffixIcon: isPassword
+            ? IconButton(
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+                icon: Icon(
+                  _isPasswordVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+              )
+            : null,
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return "Please enter your $textHint";
+          return "Please enter your ${widget.textHint}";
         }
-        if (textHint == "Email" && !isValidEmail(value.trim())) {
+        if (widget.textHint == "Email" && !isValidEmail(value.trim())) {
           return "Please enter a valid email address";
         }
-        if (textHint == "Password" && value.trim().length < 6) {
+        if (widget.textHint == "Password" && value.trim().length < 6) {
           return "Password must be at least 6 characters long";
         }
         return null;
