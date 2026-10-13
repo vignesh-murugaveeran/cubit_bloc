@@ -13,7 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 * BlocConsumer -> BlocBuilder + BlocListener.
 */
 /*
-Comparison between 2 branch(this branch with cubit_login)
+Comparison between 2 branch(this branch with cubit/login/initialize)
 1. In this main class, we add the validator in TextFormField.
 2. Also, add the validation and implement the copyWith in the auth_cubit.
 3. In auth_state, we added the copyWith().
